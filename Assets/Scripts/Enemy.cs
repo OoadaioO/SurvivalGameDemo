@@ -26,16 +26,20 @@ public class Enemy : MonoBehaviour
 
     public void Update()
     {
-        // RunLogic();
+        RunLogic();
     }
 
     public void FixedUpdate()
     {
+        
 
     }
 
     public void RunLogic()
     {
+        if(GameController.instance.player == null){
+            return;
+        }
         // Calculate direction
         currentMovementDirection = GameController.instance.player.position - transform.position;
         currentMovementDirection.Normalize();

@@ -3,8 +3,7 @@ using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class GameController : MonoBehaviour
-{
+public class GameController : MonoBehaviour {
     public bool gunDemoMode;
 
     public static GameController instance;
@@ -15,10 +14,11 @@ public class GameController : MonoBehaviour
     // Spawning enemies
     public GameObject enemyPF;
     public Transform enemyHolder;
-    
+
     float enemySpawnTimer = 0f;
     float enemySpawnTimerCD = 0f;
     int maxEnemyCount = 10000;
+    int batchIndex = 0;
 
     // Enemy logic
     Dictionary<int, List<Enemy>> enemyBatches = new Dictionary<int, List<Enemy>>();
@@ -35,7 +35,7 @@ public class GameController : MonoBehaviour
     int numberOfPartitions = 10000;
     public int NumberOfPartitions { get { return numberOfPartitions; } }
 
-    int mapWidthMin = - 1;
+    int mapWidthMin = -1;
     public int MAP_WIDTH_MIN { get { return mapWidthMin; } }
     int mapWidthMax = -1;
     public int MAP_WIDTH_MAX { get { return mapWidthMax; } }
@@ -63,27 +63,22 @@ public class GameController : MonoBehaviour
     int HALF_HEIGHT_STATIC;
 
     //! MIN HEAP FOR BATCH //
-    public class BatchScore : System.IComparable<BatchScore>
-    {
+    public class BatchScore : System.IComparable<BatchScore> {
         public int BatchId { get; }
         public int Score { get; private set; }
 
-        public BatchScore(int batchId, int score)
-        {
+        public BatchScore(int batchId, int score) {
             BatchId = batchId;
             Score = score;
         }
 
-        public void UpdateScore(int delta)
-        {
+        public void UpdateScore(int delta) {
             Score += delta;
         }
 
-        public int CompareTo(BatchScore other)
-        {
+        public int CompareTo(BatchScore other) {
             int scoreComparison = Score.CompareTo(other.Score);
-            if (scoreComparison == 0)
-            {
+            if (scoreComparison == 0) {
                 // When scores are equal, further compare based on BatchId
                 return BatchId.CompareTo(other.BatchId);
             }
@@ -98,43 +93,35 @@ public class GameController : MonoBehaviour
 
     public void AddToEnemyBatch(int batchId, Enemy enemy) { enemyBatches[batchId].Add(enemy); }
 
-    public void UpdateBatchOnUnitDeath(string option, int batchId)
-    {
+    public void UpdateBatchOnUnitDeath(string option, int batchId) {
         if (option == "enemy") UpdateBatchOnEnemyDeathRaw(batchQueue_Enemy, batchScoreMap_Enemy, batchId);
     }
 
-    void UpdateBatchOnEnemyDeathRaw(SortedSet<BatchScore> batchQueue, Dictionary<int, BatchScore> batchScoreMap, int batchId)
-    {
-        if (batchScoreMap.ContainsKey(batchId))
-        {
+    void UpdateBatchOnEnemyDeathRaw(SortedSet<BatchScore> batchQueue, Dictionary<int, BatchScore> batchScoreMap, int batchId) {
+        if (batchScoreMap.ContainsKey(batchId)) {
             BatchScore batchScore = batchScoreMap[batchId];
 
             batchQueue.Remove(batchScore); // Remove OLD
 
             batchScore.UpdateScore(-1);
-            
+
             batchQueue.Add(batchScore); // Add NEW
-        }
-        else
-        {
+        } else {
             Debug.Log("THIS SHOULDN'T HAPPEN");
         }
     }
 
-    public int GetBestBatch(string option)
-    {
+    public int GetBestBatch(string option) {
         if (option == "enemy") return GetBestBatchRaw(batchQueue_Enemy);
         else return -1;
     }
 
-    int GetBestBatchRaw(SortedSet<BatchScore> batchQueue)
-    {
+    int GetBestBatchRaw(SortedSet<BatchScore> batchQueue) {
         BatchScore leastLoadedBatch = batchQueue.Min;
 
         // Debug.Log("Least loaded: " + leastLoadedBatch.BatchId + ", score: " + leastLoadedBatch.Score);
 
-        if (leastLoadedBatch == null)
-        {
+        if (leastLoadedBatch == null) {
             // Handle the case where there are no batches
             Debug.Log("THIS SHOULDN'T HAPPEN");
             return 0;
@@ -149,12 +136,10 @@ public class GameController : MonoBehaviour
         return leastLoadedBatch.BatchId;
     }
 
-    void InitializeBatches()
-    {
-        for (int i = 0; i < 50; i++)
-        {
+    void InitializeBatches() {
+        for (int i = 0; i < 50; i++) {
             BatchScore batchScore = new BatchScore(i, 0);
-            
+
             // Enemies
             enemyBatches.Add(i, new List<Enemy>()); // batches
             batchScoreMap_Enemy.Add(i, batchScore); // batch scores
@@ -164,13 +149,11 @@ public class GameController : MonoBehaviour
 
     //!
 
-    void Awake()
-    {
+    void Awake() {
         instance = this;
     }
 
-    void Start()
-    {
+    void Start() {
         // STATIC GET SPATIAL GROUP ONCE CALCULATIONS
         CELLS_PER_ROW_STATIC = (int)Mathf.Sqrt(numberOfPartitions);
         CELLS_PER_COLUMN_STATIC = CELLS_PER_ROW_STATIC; // Square grid assumption
@@ -184,8 +167,7 @@ public class GameController : MonoBehaviour
         InitializeBatches(); //! Initiate batch stuff
 
         // Create 400 -> 10000 spatial groups
-        for (int i = 0; i < numberOfPartitions; i++)
-        {
+        for (int i = 0; i < numberOfPartitions; i++) {
             enemySpatialGroups.Add(i, new HashSet<Enemy>());
             bulletSpatialGroups.Add(i, new HashSet<Bullet>());
         }
@@ -193,8 +175,7 @@ public class GameController : MonoBehaviour
         // Spawn 10,000 enemies
         int initEnemyCount = gunDemoMode ? 100 : 10000;
         maxEnemyCount = gunDemoMode ? 100 : 10000;
-        for (int i = 0; i < initEnemyCount; i++)
-        {
+        for (int i = 0; i < initEnemyCount; i++) {
             SpawnEnemy();
         }
 
@@ -211,46 +192,41 @@ public class GameController : MonoBehaviour
 
         runLogicTimer += Time.deltaTime;
 
-        if (runLogicTimer >= runLogicTimerCD) 
-        {
+        if (runLogicTimer >= runLogicTimerCD) {
             RunOnceASecondLogicForAllBullets();
             runLogicTimer = 0f;
         }
-            
+
         SpawnEnemies();
-        RunBatchLogic((int)(runLogicTimer * 50)); // runLogicTimer is the batchID, for that set of enemies
+        if (enemyBatches.Count > 0) {
+            batchIndex = (batchIndex + 1) % enemyBatches.Count;
+            RunBatchLogic(batchIndex); // runLogicTimer is the batchID, for that set of enemies
+        }
     }
 
-    void RunOnceASecondLogicForAllBullets()
-    {
+    void RunOnceASecondLogicForAllBullets() {
         // Debug.Log("# of bullets updating: " + bulletSpatialGroups.SelectMany(x => x.Value).Count());
-        foreach (Bullet bullet in bulletSpatialGroups.SelectMany(x => x.Value).ToList())
-        {
+        foreach (Bullet bullet in bulletSpatialGroups.SelectMany(x => x.Value).ToList()) {
             bullet.OnceASecondLogic();
         }
     }
 
-    void RunBatchLogic(int batchID)
-    {
+    void RunBatchLogic(int batchID) {
         // Run logic for all enemies in batch
-        foreach (Enemy enemy in enemyBatches[batchID])
-        {
-            if (enemy) enemy.RunLogic();
-        }
+        // foreach (Enemy enemy in enemyBatches[batchID]) {
+        //     if (enemy) enemy.RunLogic();
+        // }
 
         // delete enemy which are dead
         enemyBatches[batchID].RemoveAll(enemy => enemy == null);
         // TODO: Clean out previous batch?
     }
 
-    void SpawnEnemies()
-    {
+    void SpawnEnemies() {
         enemySpawnTimer += Time.deltaTime;
 
-        if (enemySpawnTimer > enemySpawnTimerCD && enemyHolder.childCount < maxEnemyCount)
-        {
-            for (int i = 0; i < 10; i++)
-            {
+        if (enemySpawnTimer > enemySpawnTimerCD && enemyHolder.childCount < maxEnemyCount) {
+            for (int i = 0; i < 10; i++) {
                 SpawnEnemy();
             }
 
@@ -258,8 +234,7 @@ public class GameController : MonoBehaviour
         }
     }
 
-    void SpawnEnemy()
-    {
+    void SpawnEnemy() {
         //! Which batch should it be added?
         int batchToBeAdded = GetBestBatch("enemy");
 
@@ -303,13 +278,11 @@ public class GameController : MonoBehaviour
     // GetSpatialGroup(-50,  50); --> 9900
     // GetSpatialGroup( 50,  50); --> 9999
 
-    public int GetSpatialGroup(float xPos, float yPos)
-    {
+    public int GetSpatialGroup(float xPos, float yPos) {
         return GetSpatialGroupDynamic(xPos, yPos, spatialGroupWidth, spatialGroupHeight, numberOfPartitions);
     }
 
-    public int GetSpatialGroupStatic(float xPos, float yPos)
-    {
+    public int GetSpatialGroupStatic(float xPos, float yPos) {
         // Adjust positions to map's coordinate system
         float adjustedX = xPos + HALF_WIDTH_STATIC;
         float adjustedY = yPos + HALF_HEIGHT_STATIC;
@@ -322,8 +295,7 @@ public class GameController : MonoBehaviour
         return xIndex + yIndex * CELLS_PER_ROW_STATIC;
     }
 
-    int GetSpatialGroupDynamic(float xPos, float yPos, float mapWidth, float mapHeight, int totalPartitions)
-    {
+    int GetSpatialGroupDynamic(float xPos, float yPos, float mapWidth, float mapHeight, int totalPartitions) {
         // Calculate the number of cells per row and column, assuming a square grid
         int cellsPerRow = (int)Mathf.Sqrt(totalPartitions);
         int cellsPerColumn = cellsPerRow; // Square  grid assumption
@@ -348,8 +320,7 @@ public class GameController : MonoBehaviour
         return xIndex + yIndex * cellsPerRow;
     }
 
-    Vector2 GetPartitionCenterDynamic(int partition, float mapWidth, float mapHeight, int totalPartitions)
-    {
+    Vector2 GetPartitionCenterDynamic(int partition, float mapWidth, float mapHeight, int totalPartitions) {
         // Calculate the number of cells per row and column, assuming a square grid
         int cellsPerRow = (int)Mathf.Sqrt(totalPartitions);
         int cellsPerColumn = cellsPerRow; // Square grid assumption
@@ -369,18 +340,15 @@ public class GameController : MonoBehaviour
         return new Vector2(centerX, centerY);
     }
 
-    public void AddToSpatialGroup(int spatialGroupID, Enemy enemy)
-    {
+    public void AddToSpatialGroup(int spatialGroupID, Enemy enemy) {
         enemySpatialGroups[spatialGroupID].Add(enemy);
     }
 
-    public void RemoveFromSpatialGroup(int spatialGroupID, Enemy enemy)
-    {
+    public void RemoveFromSpatialGroup(int spatialGroupID, Enemy enemy) {
         enemySpatialGroups[spatialGroupID].Remove(enemy);
     }
 
-    public void DropExperiencePoint(Vector3 position, int amount)
-    {
+    public void DropExperiencePoint(Vector3 position, int amount) {
         // Vector3 offSet = new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), 0); // Randomize position a bit
 
         GameObject expPointsGO = Instantiate(experiencePointPF, position, Quaternion.identity);
