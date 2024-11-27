@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class GameController : MonoBehaviour
@@ -237,6 +238,8 @@ public class GameController : MonoBehaviour
             if (enemy) enemy.RunLogic();
         }
 
+        // delete enemy which are dead
+        enemyBatches[batchID].RemoveAll(enemy => enemy == null);
         // TODO: Clean out previous batch?
     }
 
