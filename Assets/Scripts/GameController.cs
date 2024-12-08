@@ -1,10 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class GameController : MonoBehaviour {
-    public bool gunDemoMode;
 
     public static GameController instance;
     public Transform player;
@@ -17,7 +15,7 @@ public class GameController : MonoBehaviour {
 
     float enemySpawnTimer = 0f;
     float enemySpawnTimerCD = 0f;
-    int maxEnemyCount = 10000;
+
     int batchIndex = 0;
 
     // Enemy logic
@@ -43,6 +41,9 @@ public class GameController : MonoBehaviour {
     public int MAP_HEIGHT_MIN { get { return mapHeightMin; } }
     int mapHeightMax = -1;
     public int MAP_HEIGHT_MAX { get { return mapHeightMax; } }
+
+    public int initEnemyCount = 10000;
+    public int maxEnemyCount = 10000;
 
     // For enemies
     [HideInInspector] public Dictionary<int, HashSet<Enemy>> enemySpatialGroups = new Dictionary<int, HashSet<Enemy>>();
@@ -173,8 +174,6 @@ public class GameController : MonoBehaviour {
         }
 
         // Spawn 10,000 enemies
-        int initEnemyCount = gunDemoMode ? 100 : 10000;
-        maxEnemyCount = gunDemoMode ? 100 : 10000;
         for (int i = 0; i < initEnemyCount; i++) {
             SpawnEnemy();
         }

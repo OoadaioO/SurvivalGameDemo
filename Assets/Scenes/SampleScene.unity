@@ -885,7 +885,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bulletPrefab: {fileID: 3225570568678922285, guid: a39e2dfb535064e688796beaab0ca3b2, type: 3}
+  weaponType: 1
   shootFrequency: 5
+  spreadAngle: 360
+  spreadAngleMax: 360
+  spreadSegmentCountMin: 4
+  spreadSegmentCountMax: 6
 --- !u!1 &2096225966
 GameObject:
   m_ObjectHideFlags: 0
@@ -915,10 +920,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 754b284e62ecb461f9c6c5ef496e8248, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gunDemoMode: 1
   player: {fileID: 1278438267}
   enemyPF: {fileID: 3768250796909612658, guid: 768bae48d489c4018b8758a868a891c0, type: 3}
   enemyHolder: {fileID: 604241704}
+  initEnemyCount: 900
+  maxEnemyCount: 1000
   experiencePointPF: {fileID: 58775913117271548, guid: 05660647900874bfb92c9a67b40d2dbb, type: 3}
   experiencePointHolder: {fileID: 389697306}
 --- !u!4 &2096225968
